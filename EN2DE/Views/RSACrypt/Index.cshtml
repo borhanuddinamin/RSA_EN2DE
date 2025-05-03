@@ -1,0 +1,168 @@
+@model EN2DE.Models.RSACryptModel
+@{
+    ViewData["Title"] = "RSA Encryption";
+}
+
+<div class="crypto-container">
+    <h2 class="page-title">RSA Encryption</h2>
+    
+    <div class="key-section">
+        <button class="generate-key-button" id="generateKeyBtn">
+            <i class="fas fa-key"></i> Generate New Key Pair
+        </button>
+    </div>
+    
+    <div class="key-section key-output">
+        <div class="key-column">
+            <label for="privateKey">Private Key:</label>
+            <textarea id="privateKey" class="key-textarea" readonly></textarea>
+            <button class="copy-button" onclick="copyToClipboard('privateKey')">
+                <i class="fas fa-copy"></i> Copy
+            </button>
+        </div>
+        <div class="key-column">
+            <label for="publicKey">Public Key:</label>
+            <textarea id="publicKey" class="key-textarea" readonly></textarea>
+            <button class="copy-button" onclick="copyToClipboard('publicKey')">
+                <i class="fas fa-copy"></i> Copy
+            </button>
+        </div>
+    </div>
+    
+    <div class="encryption-decryption">
+        <div class="encryption-column">
+            <h4><i class="fas fa-lock"></i> Encryption</h4>
+            <label for="plaintext">Plain Text:</label>
+            <textarea id="plaintext" class="encryption-textarea" 
+                placeholder="Enter text to encrypt..."></textarea>
+            
+            <label for="encryptKey">Public Key:</label>
+            <textarea id="encryptKey" class="encryption-textarea" 
+                placeholder="Public key in format: n, e"></textarea>
+            
+            <button class="encrypt-button" id="encryptBtn">
+                <i class="fas fa-lock"></i> Encrypt
+            </button>
+            
+            <label for="encryptedText">Encrypted Message:</label>
+            <textarea id="encryptedText" class="encryption-result-textarea" readonly></textarea>
+            <button class="copy-button" onclick="copyToClipboard('encryptedText')">
+                <i class="fas fa-copy"></i> Copy Result
+            </button>
+        </div>
+        
+        <div class="decryption-column">
+            <h4><i class="fas fa-unlock"></i> Decryption</h4>
+            <label for="cipherText">Cipher Text:</label>
+            <textarea id="cipherText" class="decryption-textarea" 
+                placeholder="Enter text to decrypt..."></textarea>
+            
+            <label for="decryptKey">Private Key:</label>
+            <textarea id="decryptKey" class="decryption-textarea" 
+                placeholder="Private key in format: n, d"></textarea>
+            
+            <button class="decrypt-button" id="decryptBtn">
+                <i class="fas fa-unlock"></i> Decrypt
+            </button>
+            
+            <label for="decryptedMessage">Decrypted Message:</label>
+            <textarea id="decryptedMessage" class="decryption-result-textarea" readonly></textarea>
+            <button class="copy-button" onclick="copyToClipboard('decryptedMessage')">
+                <i class="fas fa-copy"></i> Copy Result
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Generate Key Pair
+            $("#generateKeyBtn").click(function() {
+                $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Generating...');
+                $.ajax({
+                    url: '@Url.Action("GenerateKeys", "RSACrypt")',
+                    type: 'POST',
+                    success: function(response) {
+                        $("#publicKey").val(response.publicKey);
+                        $("#privateKey").val(response.privateKey);
+                        $("#encryptKey").val(response.publicKey);
+                        $("#decryptKey").val(response.privateKey);
+                    },
+                    error: function(error) {
+                        console.error("Error generating keys:", error);
+                    },
+                    complete: function() {
+                        $("#generateKeyBtn").prop('disabled', false)
+                            .html('<i class="fas fa-key"></i> Generate New Key Pair');
+                    }
+                });
+            });
+
+            // Encrypt
+            $("#encryptBtn").click(function() {
+                var $btn = $(this);
+                var plaintext = $("#plaintext").val();
+                var keyPair = $("#encryptKey").val();
+                
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Encrypting...');
+                
+                $.ajax({
+                    url: '@Url.Action("Encrypt", "RSACrypt")',
+                    type: 'POST',
+                    data: { plaintext: plaintext, keyPair: keyPair },
+                    success: function(response) {
+                        $("#encryptedText").val(response.encryptedText);
+                        $("#cipherText").val(response.encryptedText);
+                    },
+                    error: function(error) {
+                        console.error("Error encrypting:", error);
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false)
+                            .html('<i class="fas fa-lock"></i> Encrypt');
+                    }
+                });
+            });
+
+            // Decrypt
+            $("#decryptBtn").click(function() {
+                var $btn = $(this);
+                var cipherText = $("#cipherText").val();
+                var keyPair = $("#decryptKey").val();
+                
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Decrypting...');
+                
+                $.ajax({
+                    url: '@Url.Action("Decrypt", "RSACrypt")',
+                    type: 'POST',
+                    data: { cipherText: cipherText, keyPair: keyPair },
+                    success: function(response) {
+                        $("#decryptedMessage").val(response.decryptedText);
+                    },
+                    error: function(error) {
+                        console.error("Error decrypting:", error);
+                    },
+                    complete: function() {
+                        $btn.prop('disabled', false)
+                            .html('<i class="fas fa-unlock"></i> Decrypt');
+                    }
+                });
+            });
+        });
+
+        function copyToClipboard(elementId) {
+            var element = document.getElementById(elementId);
+            element.select();
+            document.execCommand('copy');
+            
+            var copyBtn = event.target.closest('.copy-button');
+            var originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(function() {
+                copyBtn.innerHTML = originalText;
+            }, 2000);
+        }
+    </script>
+}

@@ -1,0 +1,65 @@
+@model EN2DE.Models.CryptModel
+
+@{
+    ViewData["Title"] = "Encrypt/Decrypt";
+}
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <h2 class="text-center mb-4">@ViewData["Title"]</h2>
+            
+            <form asp-action="Process" method="post">
+                <div class="form-group">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" asp-for="IsEncrypt" id="encrypt" value="true" checked>
+                        <label class="form-check-label" for="encrypt">Encrypt</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" asp-for="IsEncrypt" id="decrypt" value="false">
+                        <label class="form-check-label" for="decrypt">Decrypt</label>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label asp-for="Password">Password</label>
+                    <input type="password" class="form-control" asp-for="Password" placeholder="Enter password">
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label asp-for="InputText">Input Text</label>
+                    <textarea class="form-control" asp-for="InputText" rows="5" placeholder="Enter text to encrypt/decrypt"></textarea>
+                    <span asp-validation-for="InputText" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Process</button>
+                </div>
+                
+                @if (!string.IsNullOrEmpty(Model.OutputText))
+                {
+                    <div class="form-group">
+                        <label asp-for="OutputText">Result</label>
+                        <textarea class="form-control" asp-for="OutputText" rows="5" readonly></textarea>
+                    </div>
+                    <div class="form-group">
+                        <button type="button" class="btn btn-secondary" onclick="copyToClipboard()">Copy to Clipboard</button>
+                    </div>
+                }
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function copyToClipboard() {
+            var outputText = document.getElementById('@Html.IdFor(m => m.OutputText)');
+            outputText.select();
+            document.execCommand('copy');
+            alert('Copied to clipboard!');
+        }
+    </script>
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
